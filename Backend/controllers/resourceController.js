@@ -19,14 +19,14 @@ const storage = multer.diskStorage({
     }
 });
 
-const allowed = ['.pdf', '.docx', '.doc', '.txt', '.ppt', '.pptx'];
+const allowed = ['.pdf', '.docx', '.doc', '.txt', '.ppt', '.pptx', '.json'];
 
 const fileFilter = (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) {
         cb(null, true);
     } else {
-        cb(new Error('Only PDF, DOC/DOCX, PPT/PPTX, and TXT files are allowed'));
+        cb(new Error('Only PDF, DOC/DOCX, PPT/PPTX, TXT, and JSON files are allowed'));
     }
 };
 
@@ -55,7 +55,7 @@ const uploadFile = async (req, res, next) => {
                 file_name: req.file.filename,
                 file_path: `/uploads/${req.file.filename}`,
                 size: (req.file.size / 1024).toFixed(1) + ' KB',
-                date: new Date().toLocaleDateString()
+                date: new Date().toISOString()
             }])
             .select()
             .single();

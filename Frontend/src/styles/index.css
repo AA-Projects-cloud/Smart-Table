@@ -4427,3 +4427,88 @@ tbody tr[data-rbd-is-dragging="true"] {
 .w-100 {
     width: 100%;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile Responsive Adjustments
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .page-content {
+        padding: 16px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .panels-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .faculty-list, .suggestion-cards {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .faculty-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .panel {
+        padding: 16px;
+    }
+
+    .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* Timetable & Tables Mobile Scroll */
+    .timetable-wrapper, .workload-table-wrapper {
+        overflow-x: auto;
+        margin-right: -16px;
+        padding-right: 16px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table.workload-table {
+        min-width: 600px;
+    }
+
+    /* MCQ Mobile view */
+    .mcq-test-container {
+        padding: 16px;
+    }
+    .mcq-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .faculty-assignment-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 2.5%;
+        padding: 16px;
+    }
+
+    .header-selects {
+        display: none; /* Hide heavy filters on mobile header mostly, or wrap them */
+    }
+
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+}

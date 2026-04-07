@@ -1449,13 +1449,39 @@ function DashboardCards({ role, overallAttendance }) {
 // FACULTY/HOD DASHBOARD VIEW
 // ═══════════════════════════════════════════════════════════════════════════
 
-function FacultyDashboard() {
+function FacultyDashboard({ user, subjects }) {
     const aiMessages = [
         "Analyzing room utilization patterns...",
         "Optimizing faculty workload distribution...",
         "Checking for scheduling conflicts...",
         "Generating optimal timetable suggestions..."
     ];
+
+    const mySubjects = subjects ? subjects.filter(s => s.faculty === user?.name) : [];
+    
+    // MCQ Upload State
+    const [showMCQModal, setShowMCQModal] = useState(false);
+    const [mcqSubject, setMcqSubject] = useState('');
+    const [mcqQuestions, setMcqQuestions] = useState([{ question: '', options: ['', '', '', ''], correct: 0 }]);
+    const { addNotification } = useNotifications();
+
+    const handleAddMCQ = () => {
+        setMcqQuestions([...mcqQuestions, { question: '', options: ['', '', '', ''], correct: 0 }]);
+    };
+
+    const handleSaveMCQ = () => {
+        if(!mcqSubject) return addNotification('Error', 'Select a subject first', 'error');
+        try {
+            const customMCQsStr = localStorage.getItem('smarttable-custom-mcqs');
+            const customMCQs = customMCQsStr ? JSON.parse(customMCQsStr) : {};
+            customMCQs[mcqSubject] = mcqQuestions;
+            localStorage.setItem('smarttable-custom-mcqs', JSON.stringify(customMCQs));
+            addNotification('Success', `Prior MCQ Test for ${mcqSubject} uploaded!`, 'success');
+            setShowMCQModal(false);
+        } catch(e) {
+            console.error(e);
+        }
+    };
 
     return (
         <div className="page-content">
@@ -1510,10 +1536,12 @@ function FacultyDashboard() {
             <div className="panel mt-6">
                 <div className="panel-header">
                     <div>
-                        <h3 className="panel-title">Faculty Workload Distribution</h3>
-                        <p className="panel-subtitle">Current semester</p>
+                        <h3 className="panel-title">{user?.role === 'hod' ? 'Faculty Workload Distribution' : 'My Assigned Subjects'}</h3>
+                        <p className="panel-subtitle">{user?.role === 'hod' ? 'Current semester' : 'Click to upload prior MCQ revision tests'}</p>
                     </div>
                 </div>
+                
+                {user?.role === 'hod' ? (
                 <div className="faculty-list">
                     <div className="faculty-item">
                         <div className="faculty-avatar">SJ</div>
@@ -1550,11 +1578,27 @@ function FacultyDashboard() {
                         <div className="faculty-progress">
                             <div className="faculty-hours">18/20 hrs</div>
                             <div className="progress-bar">
-                                <div className="progress-bar-fill orange" style={{ width: '90%' }}></div>
                             </div>
                         </div>
                     </div>
                 </div>
+                ) : (
+                <div className="faculty-list">
+                    {mySubjects.length > 0 ? mySubjects.map(sub => (
+                        <div key={sub.code} className="faculty-item" style={{ alignItems: 'center' }}>
+                            <div className="faculty-avatar">{sub.code.substring(0,2)}</div>
+                            <div className="faculty-info">
+                                <div className="faculty-name">{sub.subject || sub.name}</div>
+                                <div className="faculty-dept">{sub.code}</div>
+                            </div>
+                            <button className="room-btn" onClick={() => { setMcqSubject(sub.subject || sub.name); setMcqQuestions([{ question: '', options: ['', '', '', ''], correct: 0 }]); setShowMCQModal(true); }}>
+                                <Icon name="upload" size={16} />
+                                Upload MCQ
+                            </button>
+                        </div>
+                    )) : <p className="text-muted" style={{ padding: '1rem' }}>No subjects assigned by HOD yet.</p>}
+                </div>
+                )}
             </div>
 
             <div className="panel mt-6">
@@ -2432,8 +2476,20 @@ function MCQPage({ subjects }) {
 
     const handleStartTest = () => {
         if (!selectedSubject) return;
-        const pool = MCQ_DATABASE[selectedSubject] || GENERIC_MCQ_QUESTIONS;
-        // randomly shuffle and pick 5
+        let pool = MCQ_DATABASE[selectedSubject] || GENERIC_MCQ_QUESTIONS;
+        
+        // Load prior MCQ test uploaded by faculty if exists
+        try {
+            const customMCQsStr = localStorage.getItem('smarttable-custom-mcqs');
+            if (customMCQsStr) {
+                const customMCQs = JSON.parse(customMCQsStr);
+                if (customMCQs[selectedSubject] && customMCQs[selectedSubject].length > 0) {
+                    pool = customMCQs[selectedSubject];
+                }
+            }
+        } catch(e) { }
+
+        // randomly shuffle and pick up to 5
         const shuffled = [...pool].sort(() => 0.5 - Math.random());
         setTestQuestions(shuffled.slice(0, 5));
         setIsStarted(true);
@@ -3131,38 +3187,48 @@ function ReportsPage() {
 // SUBJECT ASSIGNMENT PAGE (HOD)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function SubjectAssignmentPage() {
+function SubjectAssignmentPage({ subjects, setSubjects }) {
+    const { addNotification } = useNotifications();
 
-    const initialData = {
-        subjects: {
-            'CS301': { id: 'CS301', name: 'Data Structures' },
-            'CS302': { id: 'CS302', name: 'Database Systems' },
-            'CS303': { id: 'CS303', name: 'Web Development' },
-            'CS304': { id: 'CS304', name: 'Operating Systems' },
-            'CS401': { id: 'CS401', name: 'Machine Learning' },
-            'MA301': { id: 'MA301', name: 'Discrete Mathematics' },
-        },
-        faculty: {
-            'faculty-1': { id: 'faculty-1', name: 'Dr. Sarah Johnson', subjectIds: ['CS301', 'CS302'] },
-            'faculty-2': { id: 'faculty-2', name: 'Ms. Lisa Wong', subjectIds: ['CS303'] },
-            'faculty-3': { id: 'faculty-3', name: 'Dr. Robert Kim', subjectIds: [] },
-            'faculty-4': { id: 'faculty-4', name: 'Prof. Michael Chen', subjectIds: ['CS401'] },
-        },
-        columns: {
-            'unassigned': {
-                id: 'unassigned',
-                title: 'Unassigned Subjects',
-                subjectIds: ['CS304', 'MA301'],
-            },
-            'faculty-1': { id: 'faculty-1', title: 'Dr. Sarah Johnson', subjectIds: ['CS301', 'CS302'] },
-            'faculty-2': { id: 'faculty-2', title: 'Ms. Lisa Wong', subjectIds: ['CS303'] },
-            'faculty-3': { id: 'faculty-3', title: 'Dr. Robert Kim', subjectIds: [] },
-            'faculty-4': { id: 'faculty-4', title: 'Prof. Michael Chen', subjectIds: ['CS401'] },
-        },
-        columnOrder: ['unassigned', 'faculty-1', 'faculty-2', 'faculty-3', 'faculty-4'],
-    };
+    const [data, setData] = useState(() => {
+        const uniqueFaculties = [...new Set((subjects || []).map(s => s.faculty).filter(Boolean))];
+        const facultyDict = {};
+        const columnsDict = {
+            'unassigned': { id: 'unassigned', title: 'Unassigned Subjects', subjectIds: [] }
+        };
+        
+        uniqueFaculties.forEach((fac, idx) => {
+            const fId = `faculty-${idx}`;
+            facultyDict[fId] = { id: fId, name: fac, subjectIds: [] };
+            columnsDict[fId] = { id: fId, title: fac, subjectIds: [] };
+        });
 
-    const [data, setData] = useState(initialData);
+        const subjectDict = {};
+        (subjects || []).forEach(sub => {
+            subjectDict[sub.code] = { id: sub.code, name: sub.subject || sub.name };
+            if (!sub.faculty || sub.faculty.trim() === '') {
+                columnsDict['unassigned'].subjectIds.push(sub.code);
+            } else {
+                const fId = Object.keys(facultyDict).find(k => facultyDict[k].name === sub.faculty);
+                if (fId) {
+                    columnsDict[fId].subjectIds.push(sub.code);
+                    facultyDict[fId].subjectIds.push(sub.code);
+                } else {
+                    columnsDict['unassigned'].subjectIds.push(sub.code);
+                }
+            }
+        });
+
+        return {
+            subjects: subjectDict,
+            faculty: facultyDict,
+            columns: columnsDict,
+            columnOrder: ['unassigned', ...Object.keys(facultyDict)]
+        };
+    });
+    // Synchronize global changes back into local state if subjects change radically.
+    // To simplify for this MVP, we only read subjects once into initial state.
+
 
     const onDragEnd = (result) => {
         const { destination, source, draggableId } = result;
@@ -3192,6 +3258,11 @@ function SubjectAssignmentPage() {
                 [destCol.id]: { ...destCol, subjectIds: destIds }
             }
         }));
+
+        // Immediately update global subjects
+        const newFaculty = destCol.id === 'unassigned' ? '' : destCol.title;
+        setSubjects(prev => prev.map(s => s.code === draggableId ? { ...s, faculty: newFaculty } : s));
+        addNotification('Subject Assigned', `${data.subjects[draggableId].name} assigned to ${newFaculty || 'Unassigned'}`, 'success');
     };
 
     return (
@@ -3939,7 +4010,7 @@ function App() {
 
         // Faculty/HOD pages
         switch (currentPage) {
-            case 'dashboard': return <FacultyDashboard />;
+            case 'dashboard': return <FacultyDashboard user={user} subjects={subjects} />;
             case 'timetable': return <TimetablePage role={user.role} subjects={subjects} setSubjects={setSubjects} semester={semester} getAuthToken={getAuthToken} />;
             case 'scheduler': return <SchedulerPage />;
             case 'rooms': return <RoomsPage role={user.role} />;
@@ -3947,13 +4018,13 @@ function App() {
             case 'attendance': return <FacultyAttendancePage getAuthToken={getAuthToken} />;
             case 'settings': return <SettingsPage studentYear={studentYear} onChangeYear={() => { setYearConfirmedThisSession(false); sessionStorage.removeItem('smarttable-year-session'); }} />;
             // HOD specific
-            case 'analytics': return user.role === 'hod' ? <AnalyticsPage /> : <FacultyDashboard />;
-            case 'workload': return user.role === 'hod' ? <WorkloadPage /> : <FacultyDashboard />;
-            case 'subjectAssignment': return user.role === 'hod' ? <SubjectAssignmentPage /> : <FacultyDashboard />;
+            case 'analytics': return user.role === 'hod' ? <AnalyticsPage /> : <FacultyDashboard user={user} subjects={subjects} />;
+            case 'workload': return user.role === 'hod' ? <WorkloadPage /> : <FacultyDashboard user={user} subjects={subjects} />;
+            case 'subjectAssignment': return user.role === 'hod' ? <SubjectAssignmentPage subjects={subjects} setSubjects={setSubjects} /> : <FacultyDashboard user={user} subjects={subjects} />;
             case 'roomControl': return user.role === 'hod' ? <RoomControlPage /> : <RoomsPage role={user.role} />;
-            case 'conflicts': return user.role === 'hod' ? <ConflictsPage /> : <FacultyDashboard />;
-            case 'reports': return user.role === 'hod' ? <ReportsPage /> : <FacultyDashboard />;
-            default: return <FacultyDashboard />;
+            case 'conflicts': return user.role === 'hod' ? <ConflictsPage /> : <FacultyDashboard user={user} subjects={subjects} />;
+            case 'reports': return user.role === 'hod' ? <ReportsPage /> : <FacultyDashboard user={user} subjects={subjects} />;
+            default: return <FacultyDashboard user={user} subjects={subjects} />;
         }
     };
 

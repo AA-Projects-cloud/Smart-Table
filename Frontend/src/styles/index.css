@@ -4467,16 +4467,66 @@ tbody tr[data-rbd-is-dragging="true"] {
         gap: 12px;
     }
 
-    /* Timetable & Tables Mobile Scroll */
-    .timetable-wrapper, .workload-table-wrapper {
+    /* Timetable fit into single screen without overflow */
+    .timetable-wrapper {
+        overflow-x: hidden;
+        margin-right: 0;
+        padding-right: 0;
+    }
+    
+    .timetable {
+        table-layout: fixed;
+        width: 100%;
+        word-wrap: break-word;
+    }
+
+    .timetable th:first-child { 
+        width: 45px !important; 
+        padding: 4px 2px;
+        font-size: 0.6rem;
+    }
+
+    .timetable td, .timetable th { 
+        padding: 4px; 
+        font-size: 0.65rem; 
+        text-align: center !important; 
+    }
+
+    .timetable-cell { 
+        padding: 4px; 
+        min-height: unset; 
+    }
+
+    .timetable-cell .subject { 
+        font-size: 0.6rem; 
+        line-height: 1.1; 
+        margin-bottom: 2px;
+    }
+
+    .timetable-cell .meta { 
+        font-size: 0.5rem; 
+        line-height: 1; 
+    }
+
+    table.workload-table {
+        min-width: 600px;
+    }
+
+    .workload-table-wrapper {
         overflow-x: auto;
         margin-right: -16px;
         padding-right: 16px;
         -webkit-overflow-scrolling: touch;
     }
-    
-    table.workload-table {
-        min-width: 600px;
+
+    /* Fixed Notification Dropdown on Mobile */
+    .notification-dropdown {
+        position: fixed;
+        top: 70px;
+        left: 16px;
+        right: 16px;
+        width: auto !important;
+        max-width: calc(100vw - 32px);
     }
 
     /* MCQ Mobile view */

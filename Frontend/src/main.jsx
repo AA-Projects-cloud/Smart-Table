@@ -1240,8 +1240,21 @@ function Header({ currentPage, onToggleSidebar, role, semester, setSemester, sec
             ? 'role-hod'
             : 'role-faculty';
 
+    const notifRef = useRef(null);
 
     const toggleNotifications = () => setShowNotifications(!showNotifications);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (notifRef.current && !notifRef.current.contains(e.target)) {
+                setShowNotifications(false);
+            }
+        };
+        if (showNotifications) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showNotifications]);
 
 
     return (
@@ -1264,7 +1277,7 @@ function Header({ currentPage, onToggleSidebar, role, semester, setSemester, sec
             </div>
 
             <div className="header-right">
-                <div className="notification-wrapper">
+                <div className="notification-wrapper" ref={notifRef}>
                     <button 
                         className={`header-icon-btn ${showNotifications ? 'active' : ''}`} 
                         onClick={toggleNotifications}

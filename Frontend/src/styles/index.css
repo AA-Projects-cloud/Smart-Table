@@ -4467,46 +4467,64 @@ tbody tr[data-rbd-is-dragging="true"] {
         gap: 12px;
     }
 
-    /* Timetable fit into single screen without overflow */
+    /* Timetable Professional Vertical Layout for Mobile */
     .timetable-wrapper {
         overflow-x: hidden;
         margin-right: 0;
         padding-right: 0;
     }
     
-    .timetable {
-        table-layout: fixed;
-        width: 100%;
-        word-wrap: break-word;
+    .timetable { display: block; width: 100%; border: none; }
+    .timetable thead { display: none; }
+    .timetable tbody { display: flex; flex-direction: column; gap: 16px; }
+    .timetable tr { 
+        display: flex; 
+        flex-direction: column; 
+        background: var(--bg-card); 
+        border-radius: 12px; 
+        border: 1px solid var(--border-color); 
+        overflow: hidden; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-
+    
     .timetable th:first-child { 
-        width: 45px !important; 
-        padding: 4px 2px;
-        font-size: 0.6rem;
+        width: 100% !important; 
+        background: var(--primary-subtle); 
+        padding: 12px 16px !important; 
+        font-size: 0.95rem; 
+        font-weight: 700;
+        text-align: left !important; 
+        border-bottom: 2px solid var(--primary-light);
+        display: block;
+        color: var(--primary);
+    }
+    
+    .timetable td { 
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px !important; 
+        text-align: left !important; 
+        border-bottom: 1px solid var(--border-color-light); 
+        position: relative;
     }
 
-    .timetable td, .timetable th { 
-        padding: 4px; 
-        font-size: 0.65rem; 
-        text-align: center !important; 
-    }
+    .timetable td:last-child { border-bottom: none; }
 
-    .timetable-cell { 
-        padding: 4px; 
-        min-height: unset; 
-    }
+    /* Day labels */
+    .timetable td:nth-child(2):before { content: "Monday"; font-weight: 700; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .timetable td:nth-child(3):before { content: "Tuesday"; font-weight: 700; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .timetable td:nth-child(4):before { content: "Wednesday"; font-weight: 700; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .timetable td:nth-child(5):before { content: "Thursday"; font-weight: 700; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .timetable td:nth-child(6):before { content: "Friday"; font-weight: 700; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
 
-    .timetable-cell .subject { 
-        font-size: 0.6rem; 
-        line-height: 1.1; 
-        margin-bottom: 2px;
-    }
-
-    .timetable-cell .meta { 
-        font-size: 0.5rem; 
-        line-height: 1; 
-    }
+    /* Hide empty days completely */
+    .timetable td:has(.timetable-cell.empty) { display: none; }
+    
+    .timetable-cell { padding: 0; min-height: unset; border: none !important; background: transparent !important; }
+    .timetable-cell.filled { padding-left: 12px; border-left: 3px solid var(--primary) !important; background: transparent !important; }
+    
+    .timetable-cell .subject { font-size: 0.95rem; line-height: 1.4; margin-bottom: 4px; color: var(--text-primary); }
+    .timetable-cell .meta { font-size: 0.8rem; line-height: 1.2; display: block; color: var(--text-secondary); }
 
     table.workload-table {
         min-width: 600px;
